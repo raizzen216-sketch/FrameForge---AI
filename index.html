@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101116">
+<title>FrameForge AI</title>
+<style>
+:root{color-scheme:dark;--bg:#101116;--card:#1c1e28;--lime:#baff68;--muted:#a7a9b4}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#202433 0,var(--bg) 58%);color:#fff;font:16px/1.5 system-ui,Arial,sans-serif;min-height:100vh;padding:24px}
+main{max-width:850px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:var(--lime);color:#111;font-size:26px;font-weight:900}h1{font-size:clamp(28px,5vw,42px);margin:0;color:var(--lime);letter-spacing:-1px}header p{color:var(--muted);margin:8px 0 24px}.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:18px}.card{background:rgba(28,30,40,.95);border:1px solid #303342;padding:20px;border-radius:18px;box-shadow:0 18px 55px #0002}.card h2{font-size:18px;margin:0 0 16px}.field{margin:14px 0}label{display:block;font-size:14px;color:#d7d8df;margin-bottom:6px}textarea,select,input[type=file]{width:100%;padding:12px;background:#11131a;color:white;border:1px solid #414452;border-radius:10px;font:inherit}textarea{resize:vertical;min-height:130px}select{min-height:46px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}button{width:100%;padding:13px 16px;margin-top:10px;border:0;border-radius:11px;font-weight:750;font-size:15px;background:var(--lime);color:#101116;cursor:pointer}button.secondary{background:#303443;color:white;border:1px solid #4a4f60}button:disabled{opacity:.55;cursor:wait}.hint,.muted{color:var(--muted);font-size:13px}.status{margin-top:14px;padding:12px;border-radius:10px;background:#11131a;color:#e8e9ef;overflow-wrap:anywhere}.status.error{color:#ffb4b4;border:1px solid #663c45}.status.good{color:var(--lime)}.preview{min-height:250px;display:grid;place-items:center;background:#11131a;border:1px dashed #44495b;border-radius:12px;padding:12px;text-align:center;color:var(--muted)}video{width:100%;max-height:560px;border-radius:10px;background:#000}.download{display:block;text-align:center;margin-top:12px;color:var(--lime);font-weight:700}.badge{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);margin-top:16px}.dot{width:8px;height:8px;border-radius:50%;background:#f0b35b}.dot.on{background:var(--lime)}footer{color:#747887;font-size:12px;text-align:center;margin:22px 0}@media(max-width:700px){body{padding:16px}.grid{grid-template-columns:1fr}.card{padding:16px}.preview{min-height:180px}}
+</style>
+</head>
+<body><main>
+<header><div class="brand"><div class="mark">◈</div><div><h1>FrameForge AI</h1><div class="muted">Deine Idee. Dein Film.</div></div></div><p>Verwandle deine Beschreibung in einen KI-generierten Videoclip.</p></header>
+<div class="grid">
+<section class="card"><h2>1. Video erstellen</h2>
+<div class="field"><label for="prompt">Beschreibe dein Video</label><textarea id="prompt" maxlength="5000" placeholder="z. B. Ein futuristischer Sportwagen fährt bei Nacht durch eine regennasse Stadt, filmische Kamerafahrt ..."></textarea><div class="hint">Tipp: Beschreibe Motiv, Bewegung, Umgebung, Licht und Kameraperspektive.</div></div>
+<div class="row"><div class="field"><label for="format">Videoformat</label><select id="format"><option value="9:16">9:16 – TikTok / Reels</option><option value="16:9">16:9 – YouTube</option><option value="1:1">1:1 – Quadrat</option></select></div>
+<div class="field"><label for="duration">Länge (Sekunden)</label><select id="duration"><option value="5">5 Sekunden</option><option value="10">10 Sekunden</option><option value="15">15 Sekunden</option></select></div></div>
+<div class="field"><label for="resolution">Gewünschte Auflösung</label><select id="resolution"><option>720p</option><option selected>1080p Full HD</option><option>4K</option></select><div class="hint">Verfügbarkeit und Kosten richten sich nach dem gewählten Modell.</div></div>
+<div class="field"><label for="image">Referenzbild (optional)</label><input type="file" id="image" accept="image/png,image/jpeg,image/webp"><div class="hint">Für die direkte Übertragung bitte ein Bild bis 5 MB auswählen. Das Modell muss Bildeingaben unterstützen.</div></div>
+<button class="secondary" id="improve">✨ Prompt verbessern</button><button id="generate">🎬 Video generieren</button><div class="status" id="status" role="status">Prüfe Backend-Verbindung …</div>
+<div class="badge"><span class="dot" id="healthDot"></span><span id="healthText">Backend wird geprüft</span></div>
+</section>
+<section class="card"><h2>2. Videovorschau</h2><div class="preview" id="preview">Dein generiertes Video erscheint hier.</div><p class="hint">Die Generierung kann je nach Modell mehrere Minuten dauern. Die Nutzung des Videodienstes kann kostenpflichtig sein.</p></section>
+</div><footer>FrameForge AI · API-Schlüssel bleiben im Backend und werden nicht an den Browser ausgeliefert.</footer>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let busy=false;
+function setStatus(text,type=""){ $("status").textContent=text; $("status").className="status "+type; }
+async function checkHealth(){try{const r=await fetch("/api/health");const d=await r.json();$("healthDot").classList.toggle("on",d.configured);$("healthText").textContent=d.configured?`Backend verbunden · ${d.model}`:"Backend läuft, aber API-Token fehlt";if(!d.configured)setStatus("Fast startklar: Hinterlege REPLICATE_API_TOKEN in der .env-Datei und starte den Server neu.","error");else setStatus("Bereit für deine Videoidee.","good");}catch{$("healthText").textContent="Backend nicht erreichbar";setStatus("Bitte starte die App mit npm start und öffne http://localhost:3000.","error");}}
+$("improve").addEventListener("click",()=>{const p=$("prompt");if(!p.value.trim()){setStatus("Gib zuerst eine Videoidee ein.","error");p.focus();return;}const suffix=" Cinematic lighting, realistic details, smooth natural motion, professional composition, consistent subject, deliberate camera movement, detailed environment, no text, no logos, no watermark.";if(!p.value.includes("Cinematic lighting"))p.value=p.value.trim().replace(/[.!?]*$/,"")+ "."+suffix;setStatus("Prompt verbessert. Du kannst ihn vor der Generierung noch bearbeiten.","good");});
+function extractUrl(d){if(d.video_url)return d.video_url;const walk=v=>{if(typeof v==="string"&&/^https?:\/\//i.test(v)&&/\.(mp4|webm|mov)(\?|$)/i.test(v))return v;if(Array.isArray(v)){for(const x of v){const u=walk(x);if(u)return u;}}else if(v&&typeof v==="object"){for(const x of Object.values(v)){const u=walk(x);if(u)return u;}}return null;};return walk(d.output);}
+$("generate").addEventListener("click",async()=>{if(busy)return;const prompt=$("prompt").value.trim();if(!prompt){setStatus("Bitte gib zuerst eine Videoidee ein.","error");$("prompt").focus();return;}busy=true;$("generate").disabled=true;$("preview").textContent="Dein Video wird vorbereitet …";setStatus("Verbinde mit dem KI-Videodienst …");
+try{
+let image_data_url="";
+const file=$("image").files[0];
+if(file){if(file.size>5*1024*1024)throw Error("Das Referenzbild ist größer als 5 MB.");image_data_url=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error("Bild konnte nicht gelesen werden."));reader.readAsDataURL(file);});}
+const response=await fetch("/api/generate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt,aspect_ratio:$("format").value,resolution:$("resolution").value,duration:Number($("duration").value),image_data_url})});
+let data=await response.json();if(!response.ok)throw Error(data.error||"Generierung fehlgeschlagen.");
+let url=extractUrl(data);
+if(!url&&data.id){
+setStatus("Auftrag gestartet. Warte auf das Video …","good");
+for(let i=0;i<120;i++){await new Promise(r=>setTimeout(r,5000));const sr=await fetch("/api/status/"+encodeURIComponent(data.id));const sd=await sr.json();if(!sr.ok)throw Error(sd.error||"Status konnte nicht geladen werden.");if(sd.status==="failed"||sd.status==="canceled")throw Error(sd.error||"Der Videodienst konnte das Video nicht erstellen.");url=extractUrl(sd);if(url||sd.status==="succeeded"||sd.status==="successful"){if(!url)throw Error("Der Auftrag ist fertig, aber der Videodienst hat keine Video-URL zurückgegeben. Prüfe die Modellausgabe.");break;}setStatus(`Video wird generiert … Status: ${sd.status||"läuft"} · ${i+1}/120`,"good");}
+}
+if(!url)throw Error("Noch keine Video-URL erhalten. Bitte versuche es erneut.");
+const v=document.createElement("video");v.src=url;v.controls=true;v.playsInline=true;v.preload="metadata";const preview=$("preview");preview.replaceChildren(v);const a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";a.className="download";a.textContent="Video öffnen / herunterladen";preview.appendChild(a);setStatus("Video bereit!","good");
+}catch(e){$("preview").textContent="Hier wird dein Video angezeigt, sobald die Generierung erfolgreich ist.";setStatus(e.message||"Unbekannter Fehler","error");}
+finally{busy=false;$("generate").disabled=false;}
+});
+checkHealth();
+</script></body></html>
